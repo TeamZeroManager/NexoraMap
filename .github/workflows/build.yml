@@ -37,7 +37,7 @@ jobs:
 
       - name: Build Minecraft 1.20.1 Fabric mod (Java 17 bytecode)
         working-directory: upstream
-        run: ./gradlew :1.20.1:build --no-daemon
+        run: bash ./gradlew :1.20.1:build --no-daemon
 
       - name: Upload NexoraMap JAR
         uses: actions/upload-artifact@v4
