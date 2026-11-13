@@ -123,6 +123,49 @@ def tune_source(base: Path) -> None:
     content = content.replace(old_style, new_style, 1)
     settings.write_text(content, encoding="utf-8")
 
+    # Replace the local player's arrow with their live skin face and a compact
+    # blue heading caret above it. Other camera viewers retain the original arrow.
+    markers = base / "src/main/java/dev/nexoramap/render/Markers.java"
+    content = markers.read_text(encoding="utf-8")
+    import_line = "import net.minecraft.client.gui.GuiGraphicsExtractor;"
+    if import_line not in content:
+        raise SystemExit("Expected Markers GUI import not found")
+    content = content.replace(import_line, import_line + "\nimport net.minecraft.client.player.AbstractClientPlayer;", 1)
+    method_anchor = "\t/**\n\t * The arrow's texture for one heading, or null while it is still being drawn."
+    player_method = """\t/**
+\t * The local player's skin face, with a small blue heading caret above it.
+\t * The face includes the skin's hat layer; the caret keeps the viewing direction readable.
+\t */
+\tpublic static void playerHead(GuiGraphicsExtractor graphics, AbstractClientPlayer player, float x, float y, float yawDegrees, float size) {
+\t\tint head = Math.max(8, Math.round(size * 2.0F));
+\t\tMapCanvas.of(graphics).playerFace(player, Math.round(x - head / 2.0F), Math.round(y - head / 2.0F), head, 0xFFFFFFFF);
+\t\tflat(graphics, x, y - head * 0.82F, yawDegrees, Math.max(2.0F, size * 0.42F), 0x3FA9F5);
+\t}
+
+"""
+    if method_anchor not in content:
+        raise SystemExit("Expected Markers arrow texture anchor not found")
+    content = content.replace(method_anchor, player_method + method_anchor, 1)
+    markers.write_text(content, encoding="utf-8")
+
+    minimap = base / "src/main/java/dev/nexoramap/MinimapHud.java"
+    content = minimap.read_text(encoding="utf-8")
+    import_line = "import net.minecraft.client.player.LocalPlayer;"
+    if import_line not in content:
+        raise SystemExit("Expected MinimapHud player import not found")
+    content = content.replace(import_line, "import net.minecraft.client.player.AbstractClientPlayer;\n" + import_line, 1)
+    old_marker = "Markers.player(graphics, x + size / 2.0F, y + size / 2.0F, Markers.onMap(viewer.getViewYRot(partialTick)), 5);"
+    new_marker = """if (viewer instanceof AbstractClientPlayer player) {
+\t\t\tMarkers.playerHead(graphics, player, x + size / 2.0F, y + size / 2.0F, Markers.onMap(viewer.getViewYRot(partialTick)), 5);
+\t\t} else {
+\t\t\tMarkers.player(graphics, x + size / 2.0F, y + size / 2.0F, Markers.onMap(viewer.getViewYRot(partialTick)), 5);
+\t\t}"""
+    if old_marker not in content:
+        raise SystemExit("Expected player marker call not found in MinimapHud.java")
+    content = content.replace(old_marker, new_marker, 1)
+    minimap.write_text(content, encoding="utf-8")
+
+
 def configure_metadata(base: Path) -> None:
     project_properties = base / "gradle.properties"
     project_text = project_properties.read_text(encoding="utf-8")
