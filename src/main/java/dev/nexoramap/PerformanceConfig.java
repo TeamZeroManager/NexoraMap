@@ -10,31 +10,39 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 /**
- * Startup performance profile. The selected limits are consumed by the map's actual
- * snapshot, worker and GPU tile queues after the upstream source is prepared.
+ * Startup workload profile. Limits are consumed by the chunk snapshot, tile baking,
+ * completed-tile upload and GPU tile cache paths.
  */
 public final class PerformanceConfig {
     public enum Profile {
-        ULTRA(1024, 96, 4, 1),
-        BALANCED(2048, 160, 8, 2),
-        QUALITY(4096, 256, 24, 4);
+        ULTRA(768, 64, 2, 1, 1, 1),
+        BALANCED(1536, 128, 6, 2, 2, 2),
+        QUALITY(3072, 192, 12, 3, 4, 4);
 
         final int maxChunks;
         final int maxGpuTiles;
         final int snapshotsPerTick;
         final int maxBakers;
+        final int maxConcurrentBakes;
+        final int finishedPerTick;
 
-        Profile(int maxChunks, int maxGpuTiles, int snapshotsPerTick, int maxBakers) {
+        Profile(int maxChunks, int maxGpuTiles, int snapshotsPerTick, int maxBakers,
+                int maxConcurrentBakes, int finishedPerTick) {
             this.maxChunks = maxChunks;
             this.maxGpuTiles = maxGpuTiles;
             this.snapshotsPerTick = snapshotsPerTick;
             this.maxBakers = maxBakers;
+            this.maxConcurrentBakes = maxConcurrentBakes;
+            this.finishedPerTick = finishedPerTick;
         }
     }
 
     private static final String FILE_NAME = "nexoramap.properties";
     private final Profile profile;
-    private PerformanceConfig(Profile profile) { this.profile = profile; }
+
+    private PerformanceConfig(Profile profile) {
+        this.profile = profile;
+    }
 
     public static PerformanceConfig defaults() {
         return new PerformanceConfig(Profile.BALANCED);
@@ -71,7 +79,8 @@ public final class PerformanceConfig {
     private void save(Path path) {
         Properties properties = new Properties();
         properties.setProperty("profile", profile.name());
-        properties.setProperty("comment", "Profiles: ULTRA, BALANCED, QUALITY. Restart Minecraft after editing.");
+        properties.setProperty("comment",
+                "Profiles: ULTRA (lowest workload), BALANCED, QUALITY. Restart Minecraft after editing.");
         try {
             Files.createDirectories(path.getParent());
             try (Writer writer = Files.newBufferedWriter(path)) {
@@ -86,6 +95,8 @@ public final class PerformanceConfig {
     public int maxChunks() { return profile.maxChunks; }
     public int maxGpuTiles() { return profile.maxGpuTiles; }
     public int snapshotsPerTick() { return profile.snapshotsPerTick; }
+    public int maxConcurrentBakes() { return profile.maxConcurrentBakes; }
+    public int finishedPerTick() { return profile.finishedPerTick; }
 
     /** Never reserves more workers than one per three logical processors. */
     public int bakerCount() {
