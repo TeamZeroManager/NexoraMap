@@ -114,6 +114,18 @@ def tune_source(base: Path) -> None:
         if old not in content:
             raise SystemExit(f"Expected visual default not found in Settings.java: {old}")
         content = content.replace(old, new, 1)
+
+    # A cooler, slightly less saturated map grade gives NexoraMap a distinct identity.
+    old_style = '''return MapStyle.DEFAULT.withName("Settings")
+            .withOutline(this.outlines ? MapStyle.DEFAULT.outline() : 0)
+            .withRoundedFog(this.roundedFog);'''
+    new_style = '''return MapStyle.DEFAULT.withName("Nexora")
+            .withGrade(1.22F, 1.10F, new float[] {1.04F, 1.0F, 0.96F}, new float[] {0.78F, 0.88F, 1.12F})
+            .withOutline(this.outlines ? MapStyle.DEFAULT.outline() : 0)
+            .withRoundedFog(this.roundedFog);'''
+    if old_style not in content:
+        raise SystemExit("Expected Settings.style() method not found")
+    content = content.replace(old_style, new_style, 1)
     settings.write_text(content, encoding="utf-8")
 
 def configure_metadata(base: Path) -> None:
