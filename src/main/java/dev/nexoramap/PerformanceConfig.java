@@ -92,11 +92,48 @@ public final class PerformanceConfig {
     }
 
     public Profile profile() { return profile; }
+    /*
+     * Heap-pressure guard: this never forces GC or changes the JVM heap. It only slows
+     * NexoraMap's optional background work, with hysteresis to avoid rapid toggling.
+     */
+    private static volatile boolean memoryPressure;
+
+    private static boolean underMemoryPressure() {
+        Runtime runtime = Runtime.getRuntime();
+        long max = runtime.maxMemory();
+        if (max <= 0L) return false;
+        long used = runtime.totalMemory() - runtime.freeMemory();
+        double ratio = (double) used / (double) max;
+        if (!memoryPressure && ratio >= 0.82D) {
+            memoryPressure = true;
+        } else if (memoryPressure && ratio <= 0.68D) {
+            memoryPressure = false;
+        }
+        return memoryPressure;
+    }
+
+    /** Temporarily halves the retained chunk target when heap usage is high. */
+    public int chunkLimit() {
+        return underMemoryPressure() ? Math.max(256, profile.maxChunks / 2) : profile.maxChunks;
+    }
+
     public int maxChunks() { return profile.maxChunks; }
     public int maxGpuTiles() { return profile.maxGpuTiles; }
-    public int snapshotsPerTick() { return profile.snapshotsPerTick; }
-    public int maxConcurrentBakes() { return profile.maxConcurrentBakes; }
-    public int finishedPerTick() { return profile.finishedPerTick; }
+
+    /** Snapshotting touches live chunks; slow it down under heap pressure. */
+    public int snapshotsPerTick() {
+        return underMemoryPressure() ? Math.max(1, profile.snapshotsPerTick / 2) : profile.snapshotsPerTick;
+    }
+
+    /** Keep optional tile work from piling up while the heap is under pressure. */
+    public int maxConcurrentBakes() {
+        return underMemoryPressure() ? 1 : profile.maxConcurrentBakes;
+    }
+
+    /** Smooth completed-tile uploads during memory pressure. */
+    public int finishedPerTick() {
+        return underMemoryPressure() ? 1 : profile.finishedPerTick;
+    }
 
     /** Never reserves more workers than one per three logical processors. */
     public int bakerCount() {
