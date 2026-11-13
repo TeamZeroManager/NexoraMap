@@ -9,23 +9,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-/** Small dependency-free configuration; safe to load before any rendering hooks are installed. */
+/**
+ * Startup performance profile. The selected limits are consumed by the map's actual
+ * snapshot, worker and GPU tile queues after the upstream source is prepared.
+ */
 public final class PerformanceConfig {
     public enum Profile {
-        ULTRA(30, 1, 0.55, 0.50),
-        BALANCED(60, 2, 0.75, 0.75),
-        QUALITY(120, 4, 1.00, 1.00);
+        ULTRA(30, 1, 0.55, 0.50, 1024, 96, 4, 1),
+        BALANCED(60, 2, 0.75, 0.75, 2048, 160, 8, 2),
+        QUALITY(120, 4, 1.00, 1.00, 4096, 256, 24, 4);
 
         final int targetFps;
         final int maxJobsPerFrame;
         final double detailScale;
         final double updateScale;
+        final int maxChunks;
+        final int maxGpuTiles;
+        final int snapshotsPerTick;
+        final int maxBakers;
 
-        Profile(int targetFps, int maxJobsPerFrame, double detailScale, double updateScale) {
+        Profile(int targetFps, int maxJobsPerFrame, double detailScale, double updateScale,
+                int maxChunks, int maxGpuTiles, int snapshotsPerTick, int maxBakers) {
             this.targetFps = targetFps;
             this.maxJobsPerFrame = maxJobsPerFrame;
             this.detailScale = detailScale;
             this.updateScale = updateScale;
+            this.maxChunks = maxChunks;
+            this.maxGpuTiles = maxGpuTiles;
+            this.snapshotsPerTick = snapshotsPerTick;
+            this.maxBakers = maxBakers;
         }
     }
 
@@ -42,6 +54,11 @@ public final class PerformanceConfig {
 
     public static PerformanceConfig defaults() {
         return new PerformanceConfig(Profile.BALANCED, true, 16);
+    }
+
+    /** Returns the initialized config, or safe defaults during early class initialization. */
+    public static PerformanceConfig active() {
+        return NexoraMap.CONFIG == null ? defaults() : NexoraMap.CONFIG;
     }
 
     public static PerformanceConfig load() {
@@ -94,4 +111,13 @@ public final class PerformanceConfig {
     public Profile profile() { return profile; }
     public boolean adaptive() { return adaptive; }
     public int targetFrameTimeMs() { return targetFrameTimeMs; }
+    public int maxChunks() { return profile.maxChunks; }
+    public int maxGpuTiles() { return profile.maxGpuTiles; }
+    public int snapshotsPerTick() { return profile.snapshotsPerTick; }
+
+    /** Never reserves more workers than one per three logical processors. */
+    public int bakerCount() {
+        int cpuLimit = Math.max(1, Runtime.getRuntime().availableProcessors() / 3);
+        return Math.max(1, Math.min(profile.maxBakers, cpuLimit));
+    }
 }
