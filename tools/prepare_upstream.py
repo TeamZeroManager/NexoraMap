@@ -116,8 +116,8 @@ def tune_source(base: Path) -> None:
         content = content.replace(old, new, 1)
 
     # A cooler, slightly less saturated map grade gives NexoraMap a distinct identity.
-    old_style = "return MapStyle.DEFAULT.withName(\"Settings\")\\n\\t\\t\\t.withOutline(this.outlines ? MapStyle.DEFAULT.outline() : 0)\\n\\t\\t\\t.withRoundedFog(this.roundedFog);"
-    new_style = "return MapStyle.DEFAULT.withName(\"Nexora\")\\n\\t\\t\\t.withGrade(1.22F, 1.10F, new float[] {1.04F, 1.0F, 0.96F}, new float[] {0.78F, 0.88F, 1.12F})\\n\\t\\t\\t.withOutline(this.outlines ? MapStyle.DEFAULT.outline() : 0)\\n\\t\\t\\t.withRoundedFog(this.roundedFog);"
+    old_style = "return MapStyle.DEFAULT.withName(\"Settings\")\n\t\t\t.withOutline(this.outlines ? MapStyle.DEFAULT.outline() : 0)\n\t\t\t.withRoundedFog(this.roundedFog);"
+    new_style = "return MapStyle.DEFAULT.withName(\"Nexora\")\n\t\t\t.withGrade(1.22F, 1.10F, new float[] {1.04F, 1.0F, 0.96F}, new float[] {0.78F, 0.88F, 1.12F})\n\t\t\t.withOutline(this.outlines ? MapStyle.DEFAULT.outline() : 0)\n\t\t\t.withRoundedFog(this.roundedFog);"
     if old_style not in content:
         raise SystemExit("Expected Settings.style() method not found")
     content = content.replace(old_style, new_style, 1)
