@@ -1,4 +1,4 @@
-name: Build NexoraMap
+name: Build NexoraMap for Minecraft 1.20.1
 
 on:
   push:
@@ -14,23 +14,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout NexoraMap
         uses: actions/checkout@v4
-      - name: Set up Java 17
+        with:
+          path: nexoramap
+
+      - name: Checkout pinned Diorama source
+        uses: actions/checkout@v4
+        with:
+          repository: SunkenInTime/diorama
+          ref: v0.9.0
+          path: upstream
+
+      - name: Set up JDK 25 for the upstream Gradle build
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
-          cache: gradle
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
-      - name: Build mod
-        run: gradle build --no-daemon
-      - name: Upload JAR
+          java-version: '25'
+
+      - name: Rebrand and apply NexoraMap performance profiles
+        run: python3 nexoramap/tools/prepare_upstream.py upstream
+
+      - name: Build Minecraft 1.20.1 Fabric mod (Java 17 bytecode)
+        working-directory: upstream
+        run: ./gradlew :1.20.1:build --no-daemon
+
+      - name: Upload NexoraMap JAR
         uses: actions/upload-artifact@v4
         with:
-          name: NexoraMap-build
-          path: build/libs/*.jar
+          name: NexoraMap-Minecraft-1.20.1-Fabric
+          path: upstream/versions/1.20.1/build/libs/nexoramap-*.jar
           if-no-files-found: error
