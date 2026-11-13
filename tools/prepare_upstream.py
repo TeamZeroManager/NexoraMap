@@ -62,6 +62,10 @@ def tune_source(base: Path) -> None:
             "private static final int MAX_CHUNKS = dev.nexoramap.PerformanceConfig.active().maxChunks();",
         "private static final int MAX_GPU_TILES = 256;":
             "private static final int MAX_GPU_TILES = dev.nexoramap.PerformanceConfig.active().maxGpuTiles();",
+        "if (this.chunks.size() > MAX_CHUNKS && !this.trimStuck) {":
+            "if (this.chunks.size() > dev.nexoramap.PerformanceConfig.active().chunkLimit() && !this.trimStuck) {",
+        "int excess = all.size() - MAX_CHUNKS * 3 / 4;":
+            "int excess = all.size() - dev.nexoramap.PerformanceConfig.active().chunkLimit() * 3 / 4;",
         "static final int BAKER_COUNT = Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() / 3));":
             "static final int BAKER_COUNT = dev.nexoramap.PerformanceConfig.active().bakerCount();",
     }
