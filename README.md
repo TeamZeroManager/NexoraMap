@@ -43,7 +43,7 @@ The baker thread count is additionally capped to one worker per three available 
 
 ## Important status
 
-The source preparation and CI build pipeline are now in place. A successful build and in-game launch still need to be confirmed by GitHub Actions and a Minecraft 1.20.1 test. No FPS or memory improvement is claimed until benchmarked against the original mod on the same machine.
+The 0.1.0 CI build for Minecraft 1.20.1 completed successfully. The resulting JAR was checked for ZIP integrity, NexoraMap metadata and namespace, mixin metadata, retained MIT license, and Java 17 bytecode. It has not yet been launched in a Minecraft client or benchmarked in-game. No FPS or memory improvement is claimed until benchmarked against the original mod on the same machine.
 
 ## License
 
