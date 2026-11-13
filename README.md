@@ -1,36 +1,41 @@
 # NexoraMap
 
-NexoraMap is a performance-first Minecraft map and minimap project derived from [Diorama](https://github.com/SunkenInTime/diorama).
+NexoraMap is a performance-focused Minecraft map and minimap for **Minecraft 1.20.1, Fabric, Java 17**.
 
-## Target
-- Minecraft 1.20.1
-- Fabric
-- Java 17
+## Build
 
-## Priorities
-1. Minimize CPU, GPU, memory, and background workload.
-2. Reduce visual detail when the selected performance profile requires it.
-3. Preserve map readability and core functionality.
-4. Give NexoraMap its own visual identity and interface.
+The build is reproducible and pins the upstream MIT-licensed Diorama source to tag `v0.9.0`. GitHub Actions checks out that exact source, applies the NexoraMap namespace/metadata and performance hooks, then builds only the 1.20.1 Fabric target.
 
-## Planned performance profiles
-- **Ultra performance:** lowest map detail and the smallest background-work budget.
-- **Balanced:** adaptive compromise between visual detail and frame stability.
-- **Quality:** higher detail and a larger work budget when the machine has headroom.
+- Source preparation: `tools/prepare_upstream.py`
+- Upstream source: [SunkenInTime/diorama at v0.9.0](https://github.com/SunkenInTime/diorama/tree/v0.9.0)
+- Build workflow: [GitHub Actions](https://github.com/TeamZeroManager/NexoraMap/actions)
+- Output: `nexoramap-<version>+1.20.1.jar` as a workflow artifact
 
-## Current implementation
-- Fabric project metadata and Gradle build configuration.
-- Dependency-light performance configuration file (`config/nexoramap.properties`).
-- Initial frame-time-aware work-budget controller with smoothed frame-time sampling and hysteresis.
+The workflow uses JDK 25 to run the pinned upstream Gradle 9.7.1 build. The mod itself is compiled to Java 17 bytecode, matching Minecraft 1.20.1.
 
-The work-budget controller is currently a foundation only. It is not yet connected to Diorama's map tile baking/render pipeline, and no performance improvement or working release JAR is claimed at this stage.
+## Performance profiles
 
-## Next development milestones
-1. Bring in the Minecraft 1.20.1 Diorama/Fabric implementation and preserve its existing map functionality.
-2. Connect adaptive scheduling to safe map tile/update work.
-3. Add configurable map resolution, render range, refresh cadence, and visual effects.
-4. Redesign the HUD and settings screens with NexoraMap branding.
-5. Build, launch, and benchmark against the original Diorama baseline.
+The selected profile is stored in `.minecraft/config/nexoramap.properties`. Change `profile` and restart Minecraft.
 
-## Upstream attribution and license
-Diorama is created by Dara Adedeji and is distributed under the MIT License. NexoraMap retains the upstream copyright and license notice in [LICENSE-DIORAMA](LICENSE-DIORAMA). The original project source is available at https://github.com/SunkenInTime/diorama.
+| Profile | Chunk snapshots per tick | Baker threads | GPU tile cache | Snapshot cap |
+|---|---:|---:|---:|---:|
+| ULTRA | 4 | Up to 1 | 96 tiles | 1,024 chunks |
+| BALANCED | 8 | Up to 2 | 160 tiles | 2,048 chunks |
+| QUALITY | 24 | Up to 4 | 256 tiles | 4,096 chunks |
+
+The baker thread count is additionally capped to one worker per three available logical processors, with at least one worker. These are workload and cache limits, not guaranteed FPS values. GPU baking remains governed by the mod's own compatibility checks and settings.
+
+## What is changed
+
+- Rebrands the mod id, Java package, resource namespace, mixin config and output JAR as NexoraMap.
+- Keeps the upstream map, minimap, waypoint, storage and rendering functionality from the pinned source.
+- Makes chunk snapshot throughput, baker concurrency, retained GPU tiles and snapshot memory cap depend on the selected performance profile.
+- Retains the upstream MIT license and copyright notice.
+
+## Important status
+
+The source preparation and CI build pipeline are now in place. A successful build and in-game launch still need to be confirmed by GitHub Actions and a Minecraft 1.20.1 test. No FPS or memory improvement is claimed until benchmarked against the original mod on the same machine.
+
+## License
+
+NexoraMap includes and modifies source distributed under the MIT License. The original copyright and license notice are retained in the resulting JAR.
