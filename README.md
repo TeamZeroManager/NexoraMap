@@ -4,14 +4,23 @@ NexoraMap is a performance-focused Minecraft map and minimap for **Minecraft 1.2
 
 ## Build
 
+NexoraMap's own starting version is **0.1.0**; the upstream Diorama source is pinned separately at **v0.9.0**.
+
 The build is reproducible and pins the upstream MIT-licensed Diorama source to tag `v0.9.0`. GitHub Actions checks out that exact source, applies the NexoraMap namespace/metadata and performance hooks, then builds only the 1.20.1 Fabric target.
 
 - Source preparation: `tools/prepare_upstream.py`
 - Upstream source: [SunkenInTime/diorama at v0.9.0](https://github.com/SunkenInTime/diorama/tree/v0.9.0)
 - Build workflow: [GitHub Actions](https://github.com/TeamZeroManager/NexoraMap/actions)
-- Output: `nexoramap-<version>+1.20.1.jar` as a workflow artifact
+- Output: `nexoramap-0.1.0+1.20.1.jar` as a workflow artifact
 
 The workflow uses JDK 25 to run the pinned upstream Gradle 9.7.1 build. The mod itself is compiled to Java 17 bytecode, matching Minecraft 1.20.1.
+
+## Install
+
+1. Install Fabric Loader for Minecraft 1.20.1 and Fabric API.
+2. Put `nexoramap-0.1.0+1.20.1.jar` in the `mods` folder.
+3. Remove the original Diorama JAR to avoid running two map mods at once.
+4. Launch the game once. Edit `.minecraft/config/nexoramap.properties` to select `ULTRA`, `BALANCED` or `QUALITY`, then restart.
 
 ## Performance profiles
 
