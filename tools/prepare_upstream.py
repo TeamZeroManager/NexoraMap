@@ -27,7 +27,7 @@ def replace_text_files(base: Path) -> None:
         if path.suffix.lower() == ".java":
             import re
             updated = re.sub(
-                r'"(?:\\\\.|[^"\\\\])*"',
+                r'"(?:\\.|[^"\\])*"',
                 lambda match: match.group(0).replace("Diorama", "NexoraMap"),
                 updated
             )
