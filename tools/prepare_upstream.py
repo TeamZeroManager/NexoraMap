@@ -24,6 +24,16 @@ def replace_text_files(base: Path) -> None:
         except UnicodeDecodeError:
             continue
         updated = content.replace("diorama", "nexoramap")
+        if path.suffix.lower() == ".java":
+            import re
+            updated = re.sub(
+                r'"(?:\\\\.|[^"\\\\])*"',
+                lambda match: match.group(0).replace("Diorama", "NexoraMap"),
+                updated
+            )
+        else:
+            updated = updated.replace("Diorama", "NexoraMap")
+        updated = updated.replace("DIORAMA_", "NEXORAMAP_")
         if updated != content:
             path.write_text(updated, encoding="utf-8")
 
