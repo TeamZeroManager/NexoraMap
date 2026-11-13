@@ -81,6 +81,11 @@ def tune_source(base: Path) -> None:
     session.write_text(content, encoding="utf-8")
 
 def configure_metadata(base: Path) -> None:
+    project_properties = base / "gradle.properties"
+    project_text = project_properties.read_text(encoding="utf-8")
+    project_text = project_text.replace("mod_version=0.9.0", "mod_version=0.1.0")
+    project_properties.write_text(project_text, encoding="utf-8")
+
     metadata_path = base / "src/main/resources/fabric.mod.json"
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     metadata["id"] = "nexoramap"
