@@ -80,6 +80,38 @@ def tune_source(base: Path) -> None:
     content = content.replace(old, new, 1)
     session.write_text(content, encoding="utf-8")
 
+    # Bound render-thread uploads and concurrent tile work. This prevents a burst of
+    # completed tiles from all being uploaded in one client tick.
+    map_level = base / "src/main/java/dev/nexoramap/render/MapLevel.java"
+    content = map_level.read_text(encoding="utf-8")
+    old = "int limit = 6;"
+    new = "int limit = dev.nexoramap.PerformanceConfig.active().maxConcurrentBakes();"
+    if old not in content:
+        raise SystemExit("Expected concurrent bake limit not found in MapLevel.java")
+    content = content.replace(old, new, 1)
+    old = "this.takeFinished(Integer.MAX_VALUE);"
+    new = "this.takeFinished(dev.nexoramap.PerformanceConfig.active().finishedPerTick());"
+    if old not in content:
+        raise SystemExit("Expected finished tile drain not found in MapLevel.java")
+    content = content.replace(old, new, 1)
+    map_level.write_text(content, encoding="utf-8")
+
+    # Give NexoraMap a distinct, lower-cost default presentation without removing
+    # the player's ability to switch back to the original visual options.
+    settings = base / "src/main/java/dev/nexoramap/Settings.java"
+    content = settings.read_text(encoding="utf-8")
+    visual_defaults = {
+        "public Quality quality = Quality.FANCY;": "public Quality quality = Quality.FAST;",
+        "public Frame minimapFrame = Frame.CLASSIC;": "public Frame minimapFrame = Frame.MINECRAFT;",
+        "public Shape minimapShape = Shape.SQUARE;": "public Shape minimapShape = Shape.ROUND;",
+        "public RadarStyle radarStyle = RadarStyle.HEADS;": "public RadarStyle radarStyle = RadarStyle.DOTS;",
+    }
+    for old, new in visual_defaults.items():
+        if old not in content:
+            raise SystemExit(f"Expected visual default not found in Settings.java: {old}")
+        content = content.replace(old, new, 1)
+    settings.write_text(content, encoding="utf-8")
+
 def configure_metadata(base: Path) -> None:
     project_properties = base / "gradle.properties"
     project_text = project_properties.read_text(encoding="utf-8")
