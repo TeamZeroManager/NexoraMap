@@ -163,6 +163,28 @@ def tune_source(base: Path) -> None:
     if old_marker not in content:
         raise SystemExit("Expected player marker call not found in MinimapHud.java")
     content = content.replace(old_marker, new_marker, 1)
+    # Add a restrained blue ring to the circular minimap and a translucent
+    # information plate, keeping the map itself and text fully readable.
+    old_frame = "MinimapFrames.draw(graphics, settings.minimapFrame, round, x, y, size);"
+    new_frame = """MinimapFrames.draw(graphics, settings.minimapFrame, round, x, y, size);
+\t\tif (round) {
+\t\t\tCircle.Quads accent = new Circle(x + size / 2.0F, y + size / 2.0F, size / 2.0F + 1.5F).ring(1.5F, 0.5F);
+\t\t\tMapCanvas.of(graphics).solid(accent.corners(), 0xD83FA9F5);
+\t\t}"""
+    if old_frame not in content:
+        raise SystemExit("Expected minimap frame draw not found")
+    content = content.replace(old_frame, new_frame, 1)
+    info_anchor = "int textY = y + size + 4;\n\t\tint left = x - 2;"
+    info_panel = """int textY = y + size + 4;
+\t\tif (!info.isEmpty()) {
+\t\t\tint widest = info.stream().mapToInt(line -> font.width(line.text())).max().orElse(0);
+\t\t\tint panelX = right ? x + size - widest - 4 : x - 4;
+\t\t\tgraphics.fill(panelX, textY - 2, panelX + widest + 8, textY + info.size() * 10 - 1, 0x70101824);
+\t\t}
+\t\tint left = x - 2;"""
+    if info_anchor not in content:
+        raise SystemExit("Expected minimap information panel anchor not found")
+    content = content.replace(info_anchor, info_panel, 1)
     minimap.write_text(content, encoding="utf-8")
 
 
