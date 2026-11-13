@@ -15,25 +15,16 @@ import java.util.Properties;
  */
 public final class PerformanceConfig {
     public enum Profile {
-        ULTRA(30, 1, 0.55, 0.50, 1024, 96, 4, 1),
-        BALANCED(60, 2, 0.75, 0.75, 2048, 160, 8, 2),
-        QUALITY(120, 4, 1.00, 1.00, 4096, 256, 24, 4);
+        ULTRA(1024, 96, 4, 1),
+        BALANCED(2048, 160, 8, 2),
+        QUALITY(4096, 256, 24, 4);
 
-        final int targetFps;
-        final int maxJobsPerFrame;
-        final double detailScale;
-        final double updateScale;
         final int maxChunks;
         final int maxGpuTiles;
         final int snapshotsPerTick;
         final int maxBakers;
 
-        Profile(int targetFps, int maxJobsPerFrame, double detailScale, double updateScale,
-                int maxChunks, int maxGpuTiles, int snapshotsPerTick, int maxBakers) {
-            this.targetFps = targetFps;
-            this.maxJobsPerFrame = maxJobsPerFrame;
-            this.detailScale = detailScale;
-            this.updateScale = updateScale;
+        Profile(int maxChunks, int maxGpuTiles, int snapshotsPerTick, int maxBakers) {
             this.maxChunks = maxChunks;
             this.maxGpuTiles = maxGpuTiles;
             this.snapshotsPerTick = snapshotsPerTick;
