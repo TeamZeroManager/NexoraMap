@@ -23,15 +23,7 @@ def replace_text_files(base: Path) -> None:
             content = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
-        updated = content.replace("dev.diorama", "dev.nexoramap")
-        updated = updated.replace("assets/diorama", "assets/nexoramap")
-        updated = updated.replace("diorama/", "nexoramap/")
-        updated = updated.replace("diorama.", "nexoramap.")
-        updated = updated.replace('"diorama"', '"nexoramap"')
-        updated = updated.replace("'diorama'", "'nexoramap'")
-        updated = updated.replace("diorama-", "nexoramap-")
-        updated = updated.replace("diorama_", "nexoramap_")
-        updated = updated.replace("diorama:", "nexoramap:")
+        updated = content.replace("diorama", "nexoramap")
         if updated != content:
             path.write_text(updated, encoding="utf-8")
 
