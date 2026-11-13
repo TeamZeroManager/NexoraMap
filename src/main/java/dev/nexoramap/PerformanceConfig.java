@@ -43,17 +43,10 @@ public final class PerformanceConfig {
 
     private static final String FILE_NAME = "nexoramap.properties";
     private final Profile profile;
-    private final boolean adaptive;
-    private final int targetFrameTimeMs;
-
-    private PerformanceConfig(Profile profile, boolean adaptive, int targetFrameTimeMs) {
-        this.profile = profile;
-        this.adaptive = adaptive;
-        this.targetFrameTimeMs = Math.max(8, Math.min(100, targetFrameTimeMs));
-    }
+    private PerformanceConfig(Profile profile) { this.profile = profile; }
 
     public static PerformanceConfig defaults() {
-        return new PerformanceConfig(Profile.BALANCED, true, 16);
+        return new PerformanceConfig(Profile.BALANCED);
     }
 
     /** Returns the initialized config, or safe defaults during early class initialization. */
@@ -79,15 +72,7 @@ public final class PerformanceConfig {
         } catch (IllegalArgumentException exception) {
             profile = defaults.profile;
         }
-        boolean adaptive = Boolean.parseBoolean(properties.getProperty("adaptive", Boolean.toString(defaults.adaptive)));
-        int frameTime;
-        try {
-            frameTime = Integer.parseInt(properties.getProperty("targetFrameTimeMs", Integer.toString(defaults.targetFrameTimeMs)));
-        } catch (NumberFormatException exception) {
-            frameTime = defaults.targetFrameTimeMs;
-        }
-
-        PerformanceConfig config = new PerformanceConfig(profile, adaptive, frameTime);
+        PerformanceConfig config = new PerformanceConfig(profile);
         config.save(path);
         return config;
     }
@@ -95,8 +80,6 @@ public final class PerformanceConfig {
     private void save(Path path) {
         Properties properties = new Properties();
         properties.setProperty("profile", profile.name());
-        properties.setProperty("adaptive", Boolean.toString(adaptive));
-        properties.setProperty("targetFrameTimeMs", Integer.toString(targetFrameTimeMs));
         properties.setProperty("comment", "Profiles: ULTRA, BALANCED, QUALITY. Restart Minecraft after editing.");
         try {
             Files.createDirectories(path.getParent());
@@ -109,8 +92,6 @@ public final class PerformanceConfig {
     }
 
     public Profile profile() { return profile; }
-    public boolean adaptive() { return adaptive; }
-    public int targetFrameTimeMs() { return targetFrameTimeMs; }
     public int maxChunks() { return profile.maxChunks; }
     public int maxGpuTiles() { return profile.maxGpuTiles; }
     public int snapshotsPerTick() { return profile.snapshotsPerTick; }
